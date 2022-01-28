@@ -1,0 +1,18 @@
+
+# jupyter notebook checkpoints
+.ipynb_checkpoints
+
+# don't include the environment(s)
+envs/
+
+# anaconda-project ignore stuff
+# Python caching
+*.pyc
+*.pyd
+*.pyo
+__pycache__/
+
+# Jupyter & Spyder stuff
+.ipynb_checkpoints/
+.Trash-*/
+/.spyderproject
