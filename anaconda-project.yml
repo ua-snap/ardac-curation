@@ -59,6 +59,7 @@ packages:
 - rasterio
 - matplotlib
 - tree
+- pandas
 #
 # In the channels section, list any Conda channel URLs to be searched
 # for packages.
