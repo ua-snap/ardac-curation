@@ -69,6 +69,7 @@ packages:
 # channels:
 #    - mychannel
 #
+- geopandas
 channels: []
 
 #
