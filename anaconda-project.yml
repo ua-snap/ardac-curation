@@ -70,6 +70,7 @@ packages:
 #    - mychannel
 #
 - geopandas
+- tqdm
 channels: []
 
 #
