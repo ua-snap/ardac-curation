@@ -1,6 +1,6 @@
 # "The Landfast Sea Ice Data"
 ## Objective
-The purpose of this document is a high-level distillation of the progress made toward identifying, collecting, and curating "the landfast sea ice data" for integration into the Arctic Data Collaborative (ARDAC). This document describes the current understanding of the data proposes the next step forward in making these data more broadly accessible and useful with the ultimate aim of to a wider variety of end-users.
+The purpose of this document is a high-level distillation of the progress made toward identifying, collecting, and curating "the landfast sea ice data" for integration into the Arctic Data Collaborative (ARDAC). This document describes the current understanding of the data and proposes the next step forward in making these data more broadly accessible and useful with the ultimate aim of a wider variety of end-users.
 
 ## Background
 An initial exploratory data analysis has been completed for two similar but incongruent archives of landfast sea ice data. The first archive are the "[Recurring Spring Leads and Landfast Ice in the Beaufort and Chukchi Seas](https://nsidc.org/data/g02173/versions/1)" data that are hosted by the NSIDC. The second archive are the data preserved locally on the SNAP file system. These data will hereafter be referred to as "ths NSIDC data" and "the InteRFACE data" for brevity. Note that the NSIDC data contain another sea ice variable: leads. The leads data are intentionally omitted from the discussion here.
