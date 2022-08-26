@@ -52,25 +52,25 @@ downloads: {}
 # Use `anaconda-project add-packages` to add packages.
 #
 packages:
-- pyproj
-
-- python=3.8
-- jupyterlab
-- rasterio
-- matplotlib
-- tree
-- pandas
-#
-# In the channels section, list any Conda channel URLs to be searched
-# for packages.
-#
-# For example,
-#
-# channels:
-#    - mychannel
-#
-- geopandas
-- tqdm
+  - pyproj
+  - python=3.8
+  - jupyterlab
+  - nbconvert
+  - rasterio
+  - matplotlib
+  - tree
+  - pandas
+  #
+  # In the channels section, list any Conda channel URLs to be searched
+  # for packages.
+  #
+  # For example,
+  #
+  # channels:
+  #    - mychannel
+  #
+  - geopandas
+  - tqdm
 channels: []
 
 #
@@ -79,9 +79,9 @@ channels: []
 # Use `anaconda-project add-platforms` to add platforms.
 #
 platforms:
-- linux-64
-- osx-64
-- win-64
+  - linux-64
+  - osx-64
+  - win-64
 
 #
 # You can define multiple, named environment specs.
@@ -96,8 +96,7 @@ env_specs:
     channels: []
     platforms: []
 
-# This is a temporary fix to remove warnings 
+# This is a temporary fix to remove warnings
 # about notebooks without commands
 skip_imports:
   notebooks: true
-
