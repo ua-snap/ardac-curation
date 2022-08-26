@@ -1,4 +1,4 @@
-"""Map and consolidate raster values to a 0 to 255 range."""
+"""This script maps and consolidates raster array values to a 0 to 1 range to generate cohesive representations of the presence or absence of landfast sea ice."""
 
 import argparse
 import pickle
@@ -8,9 +8,7 @@ from pathlib import Path
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Execute raster value correction."
-    )
+    parser = argparse.ArgumentParser(description="Execute raster value correction.")
     parser.add_argument(
         "-d",
         "--data-file",
@@ -35,22 +33,21 @@ if __name__ == "__main__":
     fp = Path(args.data_fp)
     profile = args.profile
     out_dir = Path(args.out_dir)
-    
+
     """Writes a GeoTIFF of conditionally set 0 or 1 values"""
-    
-    with open(profile, 'rb') as handle:
+
+    with open(profile, "rb") as handle:
         profile = pickle.load(handle)
-    
+
     with rio.open(fp) as src:
         arr = src.read(1)
-    
+
     arr[arr != 255] = 0
     arr[arr == 255] = 1
-    
+
     arrfix_fp = out_dir.joinpath(f"arrfix_{fp.name}")
-    
-    with rio.open(arrfix_fp, 'w', **profile) as dst:
+
+    with rio.open(arrfix_fp, "w", **profile) as dst:
         dst.write(arr, 1)
-    
+
     print(f"Results written to {arrfix_fp}")
-    

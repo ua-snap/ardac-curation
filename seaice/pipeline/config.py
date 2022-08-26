@@ -1,11 +1,5 @@
-"""This is a config file"""
+"""This config file is used to ensure the correct GDAL and PROJ libraries are used. We set the GDAL_DATA and PROJ_LIB environment variables. The behavior of anaconda-project with regards to these variables is a known issue: https://github.com/Anaconda-Platform/anaconda-project/issues/349. Import this config file before other geospatial imports (rasterio, pyproj, etc.)."""
 
-# These lines have the sole prupose of making sure
-# the GDAL_DATA and PROJ_LIB vars have the correct value!
-# if these are set in the parent conda env, those variables
-# will not be overwritten by anaconda-project as of now
-# track issue https://github.com/Anaconda-Platform/anaconda-project/issues/349
-# This needs to be imported before rasterio/pyproj imports
 import os
 
 if os.getenv("GDAL_DATA") != "":

@@ -1,31 +1,23 @@
-"""Helper functions for running the sample pipeline"""
+"""Helper functions for running pipelines."""
+
 
 def jprint(msg):
-    """J-print, for jupyter printing!
-    Just a simple wrapper around print() to print to both
-    the jupyter notebook as well as the terminal that called it
-    
-    This relies on hard-coded reference to global t_out varriable
-    containing the results of `t_out = open("/dev/stdout", "w")`
-    """
-    print(msg, file=t_out, flush=True) # prints to terminal
+    """J-print, for jupyter printing! Just a simple wrapper around print() to print to both the jupyter notebook as well as the terminal is running the notebook. This relies on hard-coded reference to global t_out variable containing the results of `t_out = open("/dev/stdout", "w")`"""
+    print(msg, file=t_out, flush=True)  # prints to terminal
     return
 
 
 def generate_nested_dict(dim_combos):
-    """Dynamically generate a nested dict based on the different
-    dimension name combinations
+    """Dynamically generate a nested dict based on the different dimension name combinations
     Args:
-        dim_combos (list): List of lists of decoded coordinate
-            values (i.e. season, model, scenario names/values)
+        dim_combos (list): List of lists of decoded coordinate values (i.e. season, model, scenario names/values)
     Returns:
         Nested dict with empty dicts at deepest levels
-    #
     """
 
     def default_to_regular(d):
-        """Convert a defaultdict to a regular dict
-        Thanks https://stackoverflow.com/a/26496899/11417211
+        """Convert a defaultdict to a regular dict, see
+        https://stackoverflow.com/a/26496899/11417211
         """
         if isinstance(d, defaultdict):
             d = {k: default_to_regular(v) for k, v in d.items()}
