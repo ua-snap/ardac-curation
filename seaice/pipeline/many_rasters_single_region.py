@@ -88,7 +88,7 @@ if __name__ == "__main__":
     time_max_data_src.close()
     mask_src.close()
 
-    out_merged_fp = out_dir.joinpath("ak_landfast_ice" + str(k).split(" ")[0] + ".tif")
+    out_merged_fp = out_dir.joinpath("ak_landfast_ice_" + str(k).split(" ")[0].replace("-", "_") + ".tif")
 
     with open(mask_dir / "both_region_profile.pickle", "rb") as handle:
         new_profile = pickle.load(handle)

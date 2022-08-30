@@ -112,7 +112,8 @@ if __name__ == "__main__":
 
     with rio.open(chuk_to_merge_src) as a, rio.open(beauf_to_merge_src) as b:
         out_arr, out_aff = merge([a, b])
-    out_merged_fp = out_dir.joinpath("ak_landfast_ice" + str(k).split(" ")[0] + ".tif")
+    out_merged_fp = out_dir.joinpath("ak_landfast_ice_" + str(k).split(" ")[0].replace("-", "_") + ".tif")
+    
     with open(mask_dir / "both_region_profile.pickle", "rb") as handle:
         new_profile = pickle.load(handle)
     new_profile["nodata"] = 0
