@@ -41,6 +41,7 @@ dependencies:
   - debugpy=1.6.4
   - decorator=5.1.1
   - defusedxml=0.7.1
+  - dill=0.3.6
   - entrypoints=0.4
   - executing=1.2.0
   - expat=2.5.0
@@ -164,6 +165,7 @@ dependencies:
   - matplotlib-inline=0.1.6
   - mistune=2.0.4
   - mpg123=1.31.1
+  - multiprocess=0.70.14
   - munkres=1.1.4
   - mysql-common=8.0.31
   - mysql-libs=8.0.31
