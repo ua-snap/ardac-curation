@@ -10,6 +10,8 @@ from pathlib import Path
 import xarray as xr
 import numpy as np
 import rasterio as rio
+import dask.array as da
+from tqdm import tqdm
 
 from wrf_raster_profile import create_wrf_raster_profile
 from config import (
@@ -64,12 +66,13 @@ def create_decadal_averages(input_dir, output_dir, dry_run):
             logging.info("Dry run: no data will be written to disk.")
         else:
             data_di = {}
-            for file in paths:
-                ds = xr.open_dataset(file)
+            for file in tqdm(paths, desc="Loading Files"):
+                ds = xr.open_mfdataset(file) # try this style indices_ds = xr.open_mfdataset(fps, combine="nested", concat_dim=[intervals])
+
                 year = int(file.name.split("_")[-1].split(".")[0])
                 data_di[year] = ds
 
-            for i in range(1950, 2100, 10):
+            for i in tqdm(range(1950, 2100, 10), desc=f"Processing Decades"):
                 start_year = i
                 end_year = i + 9
                 ds_decadal = xr.concat(
@@ -77,7 +80,7 @@ def create_decadal_averages(input_dir, output_dir, dry_run):
                 )
                 logging.info(f"Processing data between {start_year} and {end_year}...")
                 logging.info(f"Processing data for {met_or_wf_or_ws}...")
-                for climvar in variable_di[src_type][met_or_wf_or_ws].keys():
+                for climvar in tqdm(variable_di[src_type][met_or_wf_or_ws].keys(),  desc=f"Processing variables for {i}s"):
                     logging.info(f"Processing data for variable {climvar}...")
                     # climate vars are summarized over the month with different funcs
                     summary_func = variable_di[src_type][met_or_wf_or_ws][climvar]
@@ -96,6 +99,8 @@ def create_decadal_averages(input_dir, output_dir, dry_run):
                         # round to sensible precision levels
                         # is this messing with our no data values?
                         data = data.round(precision_di[climvar])
+                        # blast the no data values pew pew pew booooooom
+                        data = np.nan_to_num(data, nan=-9999.0)
                         # set output filename
                         units = unit_di[climvar]
                         mo_summary_func = summary_di[climvar]

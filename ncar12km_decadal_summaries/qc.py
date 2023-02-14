@@ -15,6 +15,7 @@ def make_list_of_tiffs(directory):
 def process_file(file, variable_data, directory):
     with rio.open(Path(directory) / file) as src:
         data = src.read(1)
+        data[data == src.nodata] = np.nan
         data = da.from_array(data, chunks=data.shape)
         min_val = np.round(np.nanmin(data), 1).compute()
         mean_val = np.round(np.nanmean(data), 1).compute()
