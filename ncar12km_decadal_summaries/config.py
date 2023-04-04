@@ -1,6 +1,21 @@
+"""Configuration for shared directories and objects"""
+
+import os
 import calendar
 import numpy as np
+from pathlib import Path
 
+# path to directory containing input NCAR met and VIC hydro datasets
+DATA_DIR = Path(os.getenv("DATA_DIR") or "/atlas_scratch/cparr4/ncar_replacement_data")
+# path to directory containing where outputs will be writtene
+OUTPUT_DIR = Path(os.getenv("OUTPUT_DIR") or "/atlas_scratch/cparr4/AK_NCAR_12km_decadal_means_of_monthly_summaries")
+OUTPUT_DIR.mkdir(exist_ok=True, parents=True)
+
+# for one-off or limited use outputs
+aux_dir = OUTPUT_DIR.joinpath("auxiliary_content")
+aux_dir.mkdir(exist_ok=True)
+
+# models, scenarios, month numbers and abbreviations
 scenarios = ["rcp45", "rcp85"]
 models = [
     "ACCESS1-3",

@@ -1,5 +1,15 @@
 """Module for loading, projecting, slicing, and summarizing climate data into GeoTIFFs from a set of netCDF files."""
 
+import os
+import xarray as xr
+import rasterio as rio
+import numpy as np
+from pyproj import Proj, Transformer, CRS
+from pathlib import Path
+from wrf import PolarStereographic
+from config import models, scenarios, variable_di, precision_di, months, unit_di, summary_di, mo_names
+from config import DATA_DIR, OUTPUT_DIR
+
 
 def mfload_all_netcdf_data(paths):
     """
@@ -16,7 +26,7 @@ def mfload_all_netcdf_data(paths):
     
 
 def project_datacube(datacube):
-     """
+    """
     Projects an xarray datacube to a polar stereographic grid with a 12 km resolution.
     
     Parameters
@@ -40,7 +50,11 @@ def project_datacube(datacube):
     e, n = transformer.transform(-150, 64)
     # Grid parameters
     dx, dy = 12000, 12000
-    ny, nx = datacube.longitude.shape[1:]
+    
+    try:
+        ny, nx = datacube.longitude.shape[1:]
+    except:
+        ny, nx = datacube.longitude.shape # met case has a little different structure
     
     # Down left corner of the domain
     x0 = -(nx-1) / 2. * dx + e
@@ -133,6 +147,28 @@ def compute_monthly_summaries(decade_slice, vargroup, climvar):
     )
     dec_mean_monthly_summary = out.compute()
     return dec_mean_monthly_summary
+
+
+def array_from_monthly_summary(dec_mean_monthly_summary, climvar, month):
+    """
+    Convert monthly summary data into a numpy array, rotate, set nodata to -9999.
+
+    Args:
+        dec_mean_monthly_summary (xr.DataArray): monthly summary data for a given climate variable.
+        climvar (str): name of the climate variable being summarized
+        month (int): month for which to extract summary data as a numpy array.
+
+    Returns:
+        data (numpy.ndarray): 2d array of summary data for the specified month and climate variable. The array has been flipped vertically
+        and rounded to a sensible precision level, and nodata values have been set to -9999.
+    """
+    # we lose the orientation from xr and it flips upside down
+    data = np.flipud(dec_mean_monthly_summary.sel(month=month).data)
+    # round to sensible precision levels
+    data = data.round(precision_di[climvar])
+    # set nodata values to -9999
+    data = np.nan_to_num(data, nan=-9999.0)
+    return data
 
 
 def make_output_filename(climvar, model, scenario, month, start_year):
