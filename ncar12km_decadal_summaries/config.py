@@ -19,6 +19,10 @@ reprojected_dir.mkdir(exist_ok=True)
 aux_dir = OUTPUT_DIR.joinpath("auxiliary_content")
 aux_dir.mkdir(exist_ok=True)
 
+# for the zipped goods. zippy longstocking
+zip_dir = OUTPUT_DIR.joinpath("zipped")
+zip_dir.mkdir(exist_ok=True)
+
 # models, scenarios, month numbers and abbreviations
 scenarios = ["rcp45", "rcp85"]
 models = [
