@@ -19,5 +19,5 @@ do
     rm -f "${zip_file}"
     
     # create a zip file for the variable and add all tiffs with this string in their filename to the zip
-    find "${directory}" -name "*${str}*.tif" -print0 | xargs -0 zip "${zip_file}"
+    find "${directory}" -name "*${str}*.tif" -print0 | xargs -0 zip -j "${zip_file}"
 done
