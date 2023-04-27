@@ -188,7 +188,7 @@ def make_output_filename(climvar, model, scenario, month, start_year):
     """
     units = unit_di[climvar]
     mo_summary_func = summary_di[climvar]
-    out_filename = f"{climvar.lower()}_{units}_{model}_{scenario}_{mo_names[month]}_{mo_summary_func}_{start_year}-{start_year + 10}_mean.tif"
+    out_filename = f"{climvar.lower()}_{units}_{model}_{scenario}_{mo_names[month]}_{mo_summary_func}_{start_year}-{start_year + 9}_mean.tif"
     return out_filename
 
 
