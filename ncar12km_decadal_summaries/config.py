@@ -11,6 +11,10 @@ DATA_DIR = Path(os.getenv("DATA_DIR") or "/atlas_scratch/cparr4/ncar_replacement
 OUTPUT_DIR = Path(os.getenv("OUTPUT_DIR") or "/atlas_scratch/cparr4/AK_NCAR_12km_decadal_means_of_monthly_summaries")
 OUTPUT_DIR.mkdir(exist_ok=True, parents=True)
 
+# for the Daymet data (historical)
+daymet_dir = DATA_DIR.joinpath("daymet")
+daymet_dir.mkdir(exist_ok=True)
+
 # for the 3338 geotiffs
 reprojected_dir = OUTPUT_DIR.joinpath("reprojected_geotiffs")
 reprojected_dir.mkdir(exist_ok=True)
