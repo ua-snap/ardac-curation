@@ -22,6 +22,10 @@ extracted_renamed_monthly_dir.mkdir(exist_ok=True)
 extracted_annual_dir = TARGET_DIR.joinpath("extracted_annual")
 extracted_annual_dir.mkdir(exist_ok=True)
 
+# path to output directory for processed data
+output_dir = TARGET_DIR.joinpath("outputs")
+output_dir.mkdir(exist_ok=True)
+
 # models, scenarios, month numbers and abbreviations
 scenarios = ["rcp45", "rcp85"]
 models = [
