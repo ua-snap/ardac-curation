@@ -2,10 +2,12 @@
 """This script includes functions that define / compute the indicators that will be derived here"""
 
 import numpy as np
+import xarray as xr
 import xclim.indices as xci
 from xclim.core.calendar import percentile_doy
 from xclim.core.units import convert_units_to, to_agg_units
 from xclim.indices.generic import threshold_count
+from config import *
 
 
 def take_sorted(arr, axis, idx):
@@ -37,7 +39,7 @@ def hd(tasmax):
         return tasmax.reduce(take_sorted, dim="time", idx=-6)
     
     # hardcoded unit conversion
-    out = tasmax.resample(time="1Y").map(func) - 273.15
+    out = tasmax.resample(time="1Y").map(func)
     out.attrs["units"] = "C"
     out.attrs["comment"] = "'hot day': 6th hottest day of the year"
     
@@ -60,7 +62,7 @@ def cd(tasmin):
         return tasmin.reduce(take_sorted, dim="time", idx=5)
     
     # hardcoded unit conversion
-    out = tasmin.resample(time="1Y").map(func) - 273.15
+    out = tasmin.resample(time="1Y").map(func)
     out.attrs["units"] = "C"
     out.attrs["comment"] = "'cold day': 6th coldest day of the year"
     
@@ -220,13 +222,14 @@ def compute_indicator(da, indicator, scenario, model, kwargs={}):
     return new_da
 
 
-def run_compute_indicators(fps, scenario, model):
+def run_compute_indicators(fps, scenario, model, daymet_ds):
     """Read in data and compute all requested indices for a particular model variable, scenario, and model.
     
     Args:
         fps (list): list of paths to the yearly met files for computing indicators from
         scenario (str): scenario being run
         model (str): model being run
+        daymet_ds (xarray.Dataset): daily daymet xarray.Dataset generated from combining all Daymet files in the NCAR 12km dataset
         
     Returns:
         summary_das (tuple): list of DataArrays containing indicator values (one for each indicator)

@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 
 
-out_dir = Path(os.getev("OUTPUT_DIR") or "/atlas_scratch/kmredilla/")
+out_dir = Path(os.getenv("OUTPUT_DIR") or "/atlas_scratch/kmredilla/")
 # path to directory containing CORDEX data
 ncar_dir = Path(os.getenv("DATA_DIR") or "/atlas_scratch/cparr4/ncar_replacement_data")
 
