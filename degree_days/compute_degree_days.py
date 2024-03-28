@@ -6,6 +6,7 @@ from dask import delayed
 
 from config import metrics
 
+
 @delayed
 def summarize_year_dd(temp_ds, temp_threshold, count_days_below_threshold):
 
@@ -49,4 +50,3 @@ def compute_cumulative_thawing_index(temp_ds):
     air_thawing_index = summarize_year_dd(temp_ds, 32, False)
     air_thawing_index = air_thawing_index.where(air_thawing_index != 0, -9999)
     return air_thawing_index
-

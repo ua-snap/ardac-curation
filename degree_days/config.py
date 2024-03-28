@@ -28,6 +28,11 @@ reprojected_dir.mkdir(exist_ok=True)
 aux_dir = OUTPUT_DIR.joinpath("auxiliary_content")
 aux_dir.mkdir(exist_ok=True)
 
+# for reference climatology outputs
+climo_dir = OUTPUT_DIR.joinpath("climatologies")
+climo_dir.mkdir(exist_ok=True)
+
+
 # for the zipped goods. zippy longstocking
 zip_dir = OUTPUT_DIR.joinpath("zipped")
 zip_dir.mkdir(exist_ok=True)
