@@ -37,7 +37,6 @@ climo_dir.mkdir(exist_ok=True)
 zip_dir = OUTPUT_DIR.joinpath("zipped")
 zip_dir.mkdir(exist_ok=True)
 
-# models, scenarios, month numbers and abbreviations
 scenarios = ["rcp45", "rcp85"]
 models = [
     "ACCESS1-3",
