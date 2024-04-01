@@ -6,7 +6,7 @@ from rasterio.warp import (
     aligned_target,
 )
 from rasterio.transform import array_bounds
-from config import reprojected_dir
+from config import reprojected_dir, unit_tag
 
 # hard coding some experimentally derived output dimensions
 # based on results of `gdalwarp -tap -tr 12000 12000`
@@ -41,7 +41,7 @@ def reproject_raster(file, name_prefix):
         )
 
         # create the new raster file
-        out_file = reprojected_dir / f"{name_prefix}_{file.name}"
+        out_file = reprojected_dir / f"{name_prefix}_{file.name[:-4]}_{unit_tag}.tif"
         with rio.open(out_file, "w", **out_profile) as dst:
             # reproject the input raster data
             rio.warp.reproject(
