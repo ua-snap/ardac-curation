@@ -77,6 +77,21 @@ def project_datacube(datacube):
 
 
 def prep_ds(fp):
+    """
+    Prepares the input dataset for the WRF model by projecting the data to a polar stereographic grid and calculating the daily average temperature in Fahrenheit.
+
+    Parameters
+    ----------
+    fp : str
+        The file path to the input dataset.
+    
+    Returns
+    -------
+    proj_ds : xarray.Dataset
+        The projected dataset with the daily average temperature in Fahrenheit.
+    out_profile : dict
+        A dictionary containing parameters for the output raster such as the transform and the dimensions of the raster. This will be used to write summarized slices (i.e. annual degree day measures) of the projected datacube to a GeoTIFF.
+    """
     with xr.open_dataset(fp) as ds:
 
         ds["tavg"] = (ds["tmin"] + ds["tmax"]) / 2
