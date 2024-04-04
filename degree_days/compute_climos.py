@@ -86,7 +86,8 @@ def compute_and_write_daymet_climo():
         climo = climo.astype(int)
         # write the climatology to disk
         out_file = (
-            climo_dir / f"daymet_historical_{metric}_{climo_start_year}_{climo_end_year}_climo.tif"
+            climo_dir
+            / f"daymet_historical_{metric}_{climo_start_year}_{climo_end_year}_climo.tif"
         )
         with rio.open(files[0]) as src:
             profile = src.profile.copy()
@@ -102,7 +103,7 @@ def compute_model_minus_daymet_deltas():
     # need to loop through metrics here
 
     for metric in metrics:
-    
+
         climo_files = list(climo_dir.glob(f"*{metric}*.tif"))
         daymet_climo_file = list(climo_dir.glob(f"*daymet*{metric}*.tif"))[0]
         print(daymet_climo_file.name)

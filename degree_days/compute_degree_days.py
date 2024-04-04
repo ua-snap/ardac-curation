@@ -10,7 +10,7 @@ from config import metrics
 @delayed
 def summarize_year_dd(temp_ds, temp_threshold, count_days_below_threshold):
     """Summarize the degree days for a year.
-    
+
     Parameters
     ----------
     temp_ds : xarray.Dataset
@@ -19,7 +19,7 @@ def summarize_year_dd(temp_ds, temp_threshold, count_days_below_threshold):
         The temperature threshold for the degree day computation.
     count_days_below_threshold : bool
         A boolean variable indicating whether to count the days below the threshold.
-    
+
     Returns
     -------
     degree_day_arr : xarray.DataArray

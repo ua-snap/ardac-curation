@@ -84,7 +84,7 @@ def prep_ds(fp):
     ----------
     fp : str
         The file path to the input dataset.
-    
+
     Returns
     -------
     proj_ds : xarray.Dataset
