@@ -11,7 +11,7 @@ import pandas as pd
 
 from luts import data_sources, pixel_values
 
-# for MMM data
+# for MMM data, as provided by Andy Mahoney
 colors = [
     [255, 255, 255],  # 0: non-fast ice or ocean (white)
     [204, 204, 255],  # 1: maximum fast ice extent (light blue)

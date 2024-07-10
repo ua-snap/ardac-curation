@@ -18,12 +18,19 @@ INPUT_FLAT_DIR.mkdir(exist_ok=True, parents=True)
 # path to a directory for output data
 OUTPUT_DIR = Path(os.getenv("OUTPUT_DIR"))
 OUTPUT_DIR.mkdir(exist_ok=True)
-# one directory for Beaufort
-BEAUFORT_DIR = OUTPUT_DIR / "Beaufort"
+# one directory for Beaufort MMM
+BEAUFORT_DIR = OUTPUT_DIR / "Beaufort_MMM"
 BEAUFORT_DIR.mkdir(exist_ok=True)
-# and one for Chukchi
-CHUKCHI_DIR = OUTPUT_DIR / "Chukchi"
+# and one for Chukchi MMM
+CHUKCHI_DIR = OUTPUT_DIR / "Chukchi_MMM"
 CHUKCHI_DIR.mkdir(exist_ok=True)
+# one directory for Beaufort Daily SLIE
+DAILY_BEAUFORT_DIR = OUTPUT_DIR / "Beaufort_Daily"
+DAILY_BEAUFORT_DIR.mkdir(exist_ok=True)
+# one directory for Chukchi Daily SLIE
+DAILY_CHUKCHI_DIR = OUTPUT_DIR / "Chukchi_Daily"
+DAILY_CHUKCHI_DIR.mkdir(exist_ok=True)
+
 
 
 # path to an archival directory for the pot-o-gold output data
