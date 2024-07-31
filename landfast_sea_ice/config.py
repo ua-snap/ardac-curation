@@ -31,8 +31,6 @@ DAILY_BEAUFORT_DIR.mkdir(exist_ok=True)
 DAILY_CHUKCHI_DIR = OUTPUT_DIR / "Chukchi_Daily"
 DAILY_CHUKCHI_DIR.mkdir(exist_ok=True)
 
-
-
 # path to an archival directory for the pot-o-gold output data
 # ARCHIVE_DIR = Path(os.getenv("ARCHIVE_DIR"))
 # ARCHIVE_DIR.mkdir(exist_ok=True)
