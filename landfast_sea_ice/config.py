@@ -1,14 +1,15 @@
 """Configuration for curating Einhorn/Mahoney 2024 Landfast Sea Ice Data."""
 
 import os
-import warnings
 from pathlib import Path
 
 # path to directory of compressed data
 # if not set, use the default
 if "INPUT_ZIP_DIR" not in os.environ:
-    warnings.warn("INPUT_ZIP_DIR not set; using None.")
     INPUT_ZIP_DIR = None
+else:
+    INPUT_ZIP_DIR = Path(os.getenv("INPU_ZIP_DIR"))
+    
 
 # path to flat directory of extracted data
 INPUT_DIR = Path(os.getenv("INPUT_DIR"))
