@@ -1,3 +1,6 @@
+import matplotlib.colors as mcolors
+
+
 ice_zones = ["Beau", "Chuk"]
 ice_zones_full = ["Beaufort", "Chukchi"]
 
@@ -15,3 +18,16 @@ pixel_values = {0: "Not Landfast Ice", 32: "Coast Vector Shadow", 64: "Out of Bo
 
 mmm_pixel_values = {0: "Ocean", 1: "Maximum Landfast Ice Extent", 2: "Median Landfast Ice Extent", 3: "Minimum Landfast Ice Extent", 4: "Mean Landfast Ice Edge", 5: "Land", 6: "Out of Domain", 7: "Coast Vector Shadow"}
 
+# For daily SLIE data plots
+daily_slie_colors = {
+    0: [255, 255, 255],    # Not Landfast Ice (white)
+    32: [191, 212, 212],   # Coast Vector Shadow (gray-green)
+    64: [230, 230, 230],   # Out of Bounds (light gray)
+    111: [128, 128, 128],  # No Data (gray)
+    128: [204, 230, 204],  # Land (pale green)
+    255: [0, 0, 255]       # Landfast Ice (blue)
+}
+daily_slie_colors_normalized = {k: (r/255, g/255, b/255) for k, (r, g, b) in daily_slie_colors.items()}
+daily_slie_cmap = mcolors.ListedColormap([daily_slie_colors_normalized[k] for k in pixel_values.keys()])
+daily_slie_boundaries = list(pixel_values.keys()) + [max(pixel_values.keys()) + 1]
+daily_slie_norm = mcolors.BoundaryNorm(daily_slie_boundaries, daily_slie_cmap.N, clip=True)

@@ -1,19 +1,22 @@
 """Configuration for curating Einhorn/Mahoney 2024 Landfast Sea Ice Data."""
 
 import os
+import warnings
 from pathlib import Path
 
 # path to directory of compressed data
-INPUT_ZIP_DIR = Path(os.getenv("INPUT_ZIP_DIR"))
-INPUT_ZIP_DIR.mkdir(exist_ok=True, parents=True)
+# if not set, use the default
+if "INPUT_ZIP_DIR" not in os.environ:
+    warnings.warn("INPUT_ZIP_DIR not set; using None.")
+    INPUT_ZIP_DIR = None
 
 # path to flat directory of extracted data
-INPUT_FLAT_DIR = Path(os.getenv("INPUT_FLAT_DIR"))
-INPUT_FLAT_DIR.mkdir(exist_ok=True, parents=True)
+INPUT_DIR = Path(os.getenv("INPUT_DIR"))
+INPUT_DIR.mkdir(exist_ok=True, parents=True)
 
 # path to directory for intermediate files
-#SCRATCH_DIR = Path(os.getenv("SCRATCH_DIR"))
-#SCRATCH_DIR.mkdir(exist_ok=True, parents=True)
+SCRATCH_DIR = Path(os.getenv("SCRATCH_DIR"))
+SCRATCH_DIR.mkdir(exist_ok=True, parents=True)
 
 # path to a directory for output data
 OUTPUT_DIR = Path(os.getenv("OUTPUT_DIR"))

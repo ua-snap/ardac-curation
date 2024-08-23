@@ -1,15 +1,17 @@
 """Exploratory data analysis utilities for Einhorn/Mahoney 2024 Landfast Sea Ice Data."""
 import os
 import random
-from pathlib import Path
+import re
+from datetime import datetime
 
 import numpy as np
 import rasterio as rio
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import pandas as pd
+import tqdm
 
-from luts import data_sources, pixel_values
+from luts import data_sources, pixel_values, daily_slie_norm, daily_slie_cmap
 
 # for MMM data, as provided by Andy Mahoney
 colors = [
@@ -41,7 +43,7 @@ def list_geotiffs(directory, str_to_match=None):
 
 
 def plot_random_sample(directory):
-    """Plot a random sample of GeoTIFF files in a directory."""
+    """Plot a single random sample of a GeoTIFF file from a directory."""
     geotiffs = list_geotiffs(directory)
     random_geotiff = random.choice(geotiffs)
     with rio.open(random_geotiff) as src:
@@ -72,8 +74,8 @@ def fetch_all_geotiff_metadata(directory, str_to_match=None):
     return filenames, geotiff_meta
 
 
-# choose a random geotiff metadata object and assert all other metadata objects are the same
 def test_geotiff_metadata_for_conformity(directory, geotiff_metadata=None, str_to_match=None):
+    """Test metadata of GeoTIFF files in a directory for conformity."""
     if geotiff_metadata is None:
         filenames, meta = fetch_all_geotiff_metadata(directory, str_to_match)
     else:
@@ -90,8 +92,9 @@ def test_geotiff_metadata_for_conformity(directory, geotiff_metadata=None, str_t
             print(f"{k}: {v}")
         return noncoforming_meta
     else:
-        print("All metadata conforms.")
+        print(f"All GeoTIFF metadata in {directory} is identical.")
         return None
+
 
 def get_geotiff_unique_value_counts(fp):
     with rio.open(fp) as src:
@@ -115,3 +118,23 @@ def describe_in_dataframe(directory):
     # add column for data source
     df["data_source"] = df.index.map(determine_data_source)
     return df
+
+
+def get_dates(target_directory):
+    
+    dates = []
+    geotiffs = list_geotiffs(target_directory, "dailyslie")
+
+    for file in tqdm.tqdm(geotiffs):
+        date = re.search(r'(\d{4})(\d{2})(\d{2})', file.name).groups()
+        dates.append(datetime(int(date[0]), int(date[1]), int(date[2])))
+    return dates
+
+
+def plot_daily_slie_array(arr_to_plot):
+    fig, ax = plt.subplots()
+    cax = ax.imshow(arr_to_plot, cmap=daily_slie_cmap, norm=daily_slie_norm)
+    cbar = fig.colorbar(cax, ticks=list(pixel_values.keys()), orientation='vertical')
+    cbar.set_ticklabels(list(pixel_values.values()))
+    plt.show()
+
