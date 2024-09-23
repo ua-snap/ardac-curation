@@ -1,66 +1,121 @@
 import re
-
-import rasterio as rio
-import xarray as xr
-import numpy as np
-import pandas as pd
-import tqdm
-import dask.array as da
-from dask.diagnostics import ProgressBar
 from datetime import datetime
 
+import rasterio
+import xarray as xr
+import rioxarray
+import dask
+import pandas as pd
+from dask_jobqueue import SLURMCluster
+from dask.distributed import Client
+
 from eda import list_geotiffs
-from config import DAILY_BEAUFORT_DIR, DAILY_CHUKCHI_DIR
+from config import DAILY_BEAUFORT_DIR, DAILY_CHUKCHI_DIR, SCRATCH_DIR
+from luts import ice_years
 
-# the first step is to list all the GeoTIFFs in the target directory
-for target_directory in [DAILY_CHUKCHI_DIR]:
+def extract_date_from_filename(geotiff):
+    """Extract datetime object from a GeoTIFF filename.
+    
+    Args:
+        geotiff (str): filename of the GeoTIFF
+    Returns:
+        date (pd.Timestamp): the date extracted from the filename
+    """
+    # file names will be like: beaufort_20230726_asip_slie.tif
+    date = re.search(r'(\d{4})(\d{2})(\d{2})', geotiff).groups()
+    date = (datetime(int(date[0]), int(date[1]), int(date[2])))
+    return pd.to_datetime(date, format='%Y%m%d')
 
-    tiffs_to_merge = list_geotiffs(target_directory)
-    # get the projected x and y coordinates from a single geotiff
-    with rio.open(tiffs_to_merge[0]) as src:
-        cols, rows = np.meshgrid(np.arange(src.width), np.arange(src.height))
-        xarr, yarr = rio.transform.xy(src.transform, rows, cols)
-        xcoords = xarr[0]
-        ycoords = np.array([a[0] for a in yarr])
 
-    # sort GeoTIFFs by date to ensure correct order
-    tiffs_to_merge.sort(key=lambda x: re.search(r'(\d{8})', x.name).group(1))
+def select_by_ice_year(geotiff_list, ice_year):
+    """Select GeoTIFFs by ice year. An ice year begins in October of one calendar year and ends in July of the following year.
+    
+    Args:
+        geotiff_list (list): list of GeoTIFF filenames
+        ice_year (str): the ice year to select data for, e.g., '2010-11'
+    Returns:
+        selected_geotiffs (list): list of GeoTIFF filenames for specified ice year
+    """
+    start_year, _ = ice_year.split('-')
+    start_year = int(start_year)
+    end_year = start_year + 1
+    ice_year_start = datetime(start_year, 10, 1)  # October 1 of start_year
+    ice_year_end = datetime(end_year, 7, 31)  # July 31 of end_year
 
-    data_arrays = []
-    dates = []
+    selected_geotiffs = []
 
-    for file in tqdm.tqdm(tiffs_to_merge):
-        with rio.open(file) as src:
-            data = src.read(1)
-            date = re.search(r'(\d{4})(\d{2})(\d{2})', file.name).groups()
-        
-        data_arrays.append(da.from_array(data))
+    for geotiff in geotiff_list:
+        # geotiff name format like beaufort_20230726_asip_slie.tif
+        match = re.search(r'(\d{4})(\d{2})(\d{2})', geotiff.name)
+        if match:
+            year, month, day = map(int, match.groups())
+            file_date = datetime(year, month, day)
 
-        dates.append(datetime(int(date[0]), int(date[1]), int(date[2])))
+            if ice_year_start <= file_date <= ice_year_end:
+                selected_geotiffs.append(geotiff)
 
-    # convert the list of data arrays into a stacked 3D numpy array
-    slie_data_stack = da.stack(data_arrays, axis=0)
-    # convert list of datetime objects to pandas datetime index
-    time_index = pd.to_datetime(dates)
+    return selected_geotiffs
 
-    # create the xarray Dataset
-    ds = xr.Dataset(
-        {
-            "slie": (("time", "y", "x"), slie_data_stack)
-        },
-        coords={
-            "time": time_index,
-            "y": ycoords,
-            "x": xcoords,
-        }
+
+def load_geotiff_as_dataarray(geotiff):
+    """Load a GeoTIFF file as a DataArray using rioxarray.
+    
+    Args:
+        geotiff (pathlib.PosixPath): path to the GeoTIFF file
+    Returns:
+        xr_da (xarray.DataArray): the GeoTIFF data as an xarray DataArray
+    """
+    xr_da = rioxarray.open_rasterio(
+        geotiff,
+        chunks={'x': 1024, 'y': 1024}, # chunk size seems memsafe for t2small
+        lock=False,
     )
+    return xr_da
 
-    # Define the CRS as EPSG:3338
-    crs_dict = {"crs": "EPSG:3338"}
-    # Add the CRS as an attribute to the dataset
-    ds.attrs.update(crs_dict)
-        # Write to a netCDF file using Dask
-    with ProgressBar():
-        ds.to_netcdf(target_directory/"daily_slie.nc", engine='netcdf4')
 
-    print(f"Created netCDF file in {target_directory}")
+def write_netcdf(dataset, output_nc_file):
+    dataset.to_netcdf(output_nc_file)
+
+if __name__ == "__main__":
+    cluster = SLURMCluster(
+        cores=36,
+        memory="128GB",
+        queue="t2small",
+        walltime="2:00:00",
+        log_directory=".",
+        local_directory=SCRATCH_DIR,  # Set your desired location
+        account="cmip6",
+        interface="ib0",
+    )
+    client = Client(cluster)
+    print(f"Dask dashboard available at: {client.dashboard_link}")
+    cluster.scale(36)
+
+    for ice_season in ice_years:
+
+        geotiff_files = list_geotiffs(DAILY_BEAUFORT_DIR)
+        ice_year_geotiffs = sorted(select_by_ice_year(geotiff_files, ice_season))
+        data_arrays = []
+        dates = []
+
+        for file in ice_year_geotiffs:
+            date = extract_date_from_filename(file.name)
+            dates.append(date)
+            # dask to load the data lazily
+            data_array = dask.delayed(load_geotiff_as_dataarray)(file)
+            data_arrays.append(data_array)
+
+        # compute and stack data arrays to xr dataset with time dim
+        data_arrays = dask.compute(*data_arrays)
+
+        dataset = xr.concat(data_arrays, dim="time")
+        dataset = dataset.assign_coords(time=("time", dates))
+
+        dataset.attrs['crs'] = rasterio.open(geotiff_files[0]).crs.to_string()
+
+        output_nc_file = DAILY_BEAUFORT_DIR / f"beaufort_sea_daily_slie_{ice_season}.nc"
+        write_netcdf(dataset, output_nc_file)
+        print(f"NetCDF file successfully written to {output_nc_file}")
+
+    cluster.close()
+    client.close()
