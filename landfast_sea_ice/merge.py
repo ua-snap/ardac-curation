@@ -1,5 +1,6 @@
 import re
 from datetime import datetime
+import time
 
 import rasterio
 import xarray as xr
@@ -10,33 +11,40 @@ from dask_jobqueue import SLURMCluster
 from dask.distributed import Client
 
 from eda import list_geotiffs
-from config import DAILY_BEAUFORT_DIR, DAILY_CHUKCHI_DIR, SCRATCH_DIR
+from config import (
+    DAILY_BEAUFORT_DIR,
+    BEAUFORT_NETCDF_DIR,
+    DAILY_CHUKCHI_DIR,
+    CHUKCHI_NETCDF_DIR,
+    SCRATCH_DIR,
+)
 from luts import ice_years
+
 
 def extract_date_from_filename(geotiff):
     """Extract datetime object from a GeoTIFF filename.
-    
+
     Args:
         geotiff (str): filename of the GeoTIFF
     Returns:
         date (pd.Timestamp): the date extracted from the filename
     """
     # file names will be like: beaufort_20230726_asip_slie.tif
-    date = re.search(r'(\d{4})(\d{2})(\d{2})', geotiff).groups()
-    date = (datetime(int(date[0]), int(date[1]), int(date[2])))
-    return pd.to_datetime(date, format='%Y%m%d')
+    date = re.search(r"(\d{4})(\d{2})(\d{2})", geotiff).groups()
+    date = datetime(int(date[0]), int(date[1]), int(date[2]))
+    return pd.to_datetime(date, format="%Y%m%d")
 
 
 def select_by_ice_year(geotiff_list, ice_year):
     """Select GeoTIFFs by ice year. An ice year begins in October of one calendar year and ends in July of the following year.
-    
+
     Args:
         geotiff_list (list): list of GeoTIFF filenames
         ice_year (str): the ice year to select data for, e.g., '2010-11'
     Returns:
         selected_geotiffs (list): list of GeoTIFF filenames for specified ice year
     """
-    start_year, _ = ice_year.split('-')
+    start_year, _ = ice_year.split("-")
     start_year = int(start_year)
     end_year = start_year + 1
     ice_year_start = datetime(start_year, 10, 1)  # October 1 of start_year
@@ -46,7 +54,7 @@ def select_by_ice_year(geotiff_list, ice_year):
 
     for geotiff in geotiff_list:
         # geotiff name format like beaufort_20230726_asip_slie.tif
-        match = re.search(r'(\d{4})(\d{2})(\d{2})', geotiff.name)
+        match = re.search(r"(\d{4})(\d{2})(\d{2})", geotiff.name)
         if match:
             year, month, day = map(int, match.groups())
             file_date = datetime(year, month, day)
@@ -59,7 +67,7 @@ def select_by_ice_year(geotiff_list, ice_year):
 
 def load_geotiff_as_dataarray(geotiff):
     """Load a GeoTIFF file as a DataArray using rioxarray.
-    
+
     Args:
         geotiff (pathlib.PosixPath): path to the GeoTIFF file
     Returns:
@@ -67,33 +75,35 @@ def load_geotiff_as_dataarray(geotiff):
     """
     xr_da = rioxarray.open_rasterio(
         geotiff,
-        chunks={'x': 1024, 'y': 1024}, # chunk size seems memsafe for t2small
+        chunks={"x": 4096, "y": 4096},  # chunk size seems OK for t2small
         lock=False,
     )
+    # drop the "band" dimension because these are all single band GeoTIFFs
+    # rioxarray adds a "band" dimension by default
+    xr_da = xr_da.squeeze(drop=True)
     return xr_da
 
 
 def write_netcdf(dataset, output_nc_file):
     dataset.to_netcdf(output_nc_file)
 
+
 if __name__ == "__main__":
-    cluster = SLURMCluster(
-        cores=36,
-        memory="128GB",
-        queue="t2small",
-        walltime="2:00:00",
-        log_directory=".",
-        local_directory=SCRATCH_DIR,  # Set your desired location
-        account="cmip6",
-        interface="ib0",
-    )
-    client = Client(cluster)
-    print(f"Dask dashboard available at: {client.dashboard_link}")
-    cluster.scale(36)
+    for ice_season in ice_years[-10:]:
+        cluster = SLURMCluster(
+            cores=20,
+            memory="64GB",
+            queue="t2small",
+            walltime="23:00:00",
+            log_directory=SCRATCH_DIR,
+            local_directory=SCRATCH_DIR,
+            account="cmip6",
+            interface="ib0",
+        )
+        client = Client(cluster)
 
-    for ice_season in ice_years:
-
-        geotiff_files = list_geotiffs(DAILY_BEAUFORT_DIR)
+        cluster.scale(42)
+        geotiff_files = list_geotiffs(DAILY_CHUKCHI_DIR)
         ice_year_geotiffs = sorted(select_by_ice_year(geotiff_files, ice_season))
         data_arrays = []
         dates = []
@@ -108,14 +118,15 @@ if __name__ == "__main__":
         # compute and stack data arrays to xr dataset with time dim
         data_arrays = dask.compute(*data_arrays)
 
-        dataset = xr.concat(data_arrays, dim="time")
+        dataset = xr.concat(data_arrays, dim="time").to_dataset(name="slie")
         dataset = dataset.assign_coords(time=("time", dates))
+        dataset.attrs["crs"] = rasterio.open(geotiff_files[0]).crs.to_string()
 
-        dataset.attrs['crs'] = rasterio.open(geotiff_files[0]).crs.to_string()
-
-        output_nc_file = DAILY_BEAUFORT_DIR / f"beaufort_sea_daily_slie_{ice_season}.nc"
+        output_nc_file = CHUKCHI_NETCDF_DIR / f"chukchi_sea_daily_slie_{ice_season}.nc"
         write_netcdf(dataset, output_nc_file)
+
         print(f"NetCDF file successfully written to {output_nc_file}")
 
-    cluster.close()
-    client.close()
+        cluster.close()
+        client.close()
+        time.sleep(30)

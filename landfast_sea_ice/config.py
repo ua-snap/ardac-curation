@@ -28,12 +28,17 @@ BEAUFORT_DIR.mkdir(exist_ok=True)
 # and one for Chukchi MMM
 CHUKCHI_DIR = OUTPUT_DIR / "Chukchi_MMM"
 CHUKCHI_DIR.mkdir(exist_ok=True)
-# one directory for Beaufort Daily SLIE
+# one directory for Beaufort Daily SLIE, + netCDFS
 DAILY_BEAUFORT_DIR = OUTPUT_DIR / "Beaufort_Daily"
 DAILY_BEAUFORT_DIR.mkdir(exist_ok=True)
-# one directory for Chukchi Daily SLIE
+BEAUFORT_NETCDF_DIR = OUTPUT_DIR / "Beaufort_NetCDFs"
+BEAUFORT_NETCDF_DIR.mkdir(exist_ok=True)
+
+# one directory for Chukchi Daily SLIE, + netCDFS
 DAILY_CHUKCHI_DIR = OUTPUT_DIR / "Chukchi_Daily"
 DAILY_CHUKCHI_DIR.mkdir(exist_ok=True)
+CHUKCHI_NETCDF_DIR = OUTPUT_DIR / "Chukchi_NetCDFs"
+CHUKCHI_NETCDF_DIR.mkdir(exist_ok=True)
 
 # path to an archival directory for the pot-o-gold output data
 # ARCHIVE_DIR = Path(os.getenv("ARCHIVE_DIR"))
