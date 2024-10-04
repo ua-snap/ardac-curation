@@ -138,3 +138,13 @@ def plot_daily_slie_array(arr_to_plot):
     cbar.set_ticklabels(list(pixel_values.values()))
     plt.show()
 
+
+def validate_values(self, array):
+    """Check if the file's values are within the expected range or set."""
+    if self.expected_values is not None:
+        if not np.isin(array, self.expected_values).all():
+            return False
+    else:
+        if not ((array >= self.value_range[0]) & (array <= self.value_range[1])).all():
+            return False
+    return True

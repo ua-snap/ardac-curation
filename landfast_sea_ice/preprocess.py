@@ -5,11 +5,45 @@ from rasterio.warp import Resampling, aligned_target
 from rasterio.transform import array_bounds
 
 from luts import data_sources
-from config import DAILY_CHUKCHI_DIR, DAILY_BEAUFORT_DIR
+from config import CHUKCHI_DIR, BEAUFORT_DIR, DAILY_CHUKCHI_DIR, DAILY_BEAUFORT_DIR
 
 # set target resolution and crs
 tr = 100
 dst_crs = rio.crs.CRS.from_epsg(3338)
+
+
+def mmm_rename(fp):
+    """Rename the MMM summary files to a more descriptive name.
+    Args:
+        fp (Path): Path to the file to be renamed.
+    Returns:
+    """
+    if "Chuk" == fp.parent.parent.parent.name:
+        zone = "Chukchi"
+        out_dir = CHUKCHI_DIR
+    elif "Beau" == fp.parent.parent.parent.name:
+        zone = "Beaufort"
+        out_dir = BEAUFORT_DIR
+    else:
+        print(f"{fp} not in Beaufort or Chukchi, this is unexpected!")
+    fname = fp.name
+    month = fname.split("_")[1]
+
+    if "1996-05" in fname:
+        era = "1996-2005"
+    elif "2005-14" in fname:
+        era = "2005-2014"
+    elif "2014-23" in fname:
+        era = "2014-2023"
+    else:
+        print(f"{fp} does not have a valid era, this is unexpected!")
+
+    new_name = f"{zone}_{month}_{era}_SLIE_MMM_summary.tif"
+    new_fp = out_dir / new_name
+    return new_fp
+
+
+rename(geotiffs_to_ingest[0])
 
 
 def rename(fp):
@@ -21,7 +55,7 @@ def rename(fp):
         out_dir = DAILY_BEAUFORT_DIR
     else:
         print(fp)
-    
+
     fname = fp.name
     yyyymmdd = fname.split("_")[0][1:]
 
@@ -42,7 +76,7 @@ def tap_reproject_raster(file):
         tap_transform, tap_width, tap_height = aligned_target(
             warp_transform, width, height, tr
         )
-        
+
         # define the output raster profile
         out_profile = src.profile.copy()
         out_profile.update(
