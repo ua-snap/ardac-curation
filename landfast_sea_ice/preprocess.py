@@ -7,7 +7,7 @@ from rasterio.transform import array_bounds
 from luts import data_sources
 from config import CHUKCHI_DIR, BEAUFORT_DIR, DAILY_CHUKCHI_DIR, DAILY_BEAUFORT_DIR
 
-# set target resolution and crs
+# set target resolution and crs globally for all outputs
 tr = 100
 dst_crs = rio.crs.CRS.from_epsg(3338)
 
@@ -17,6 +17,7 @@ def mmm_rename(fp):
     Args:
         fp (Path): Path to the file to be renamed.
     Returns:
+        (Path): Path for the renamed output file.
     """
     if "Chuk" == fp.parent.parent.parent.name:
         zone = "Chukchi"
@@ -43,7 +44,57 @@ def mmm_rename(fp):
     return new_fp
 
 
-rename(geotiffs_to_ingest[0])
+def tap_reproject_mmm_raster(file):
+    """Reprojects a raster file to a new coordinate reference system (CRS) and aligns it to a target resolution.
+    1. Opens the input raster file.
+    2. Computes the new affine transformation, width, and height for the target CRS and resolution.
+    3. Aligns the target affine transformation to the specified resolution.
+    4. Updates the raster profile with the new CRS, transformation, dimensions, and compression settings.
+    5. Creates a new raster file name based on the input file name.
+    6. Reprojects the input raster data to the new CRS and writes it to the output file.
+    The output raster file is saved with LZW compression.
+
+    Args:
+        file (str): The path to the input raster file.
+    Returns:
+        None
+    """
+    with rio.open(file) as src:
+        # compute the new affine transformation, width and height
+        warp_transform, width, height = rio.warp.calculate_default_transform(
+            src.crs, dst_crs, src.width, src.height, *src.bounds, resolution=(tr, tr)
+        )
+        tap_transform, tap_width, tap_height = aligned_target(
+            warp_transform, width, height, tr
+        )
+
+        # define the output raster profile
+        out_profile = src.profile.copy()
+        out_profile.update(
+            {
+                "crs": dst_crs,
+                "transform": tap_transform,
+                "width": tap_width,
+                "height": tap_height,
+                "bounds": array_bounds(tap_height, tap_width, tap_transform),
+                "compress": "lzw",
+            }
+        )
+
+        # create the new raster file name
+        out_file = mmm_rename(file)
+
+        with rio.open(out_file, "w", **out_profile) as dst:
+            # reproject the input raster data
+            rio.warp.reproject(
+                source=src.read(1),
+                destination=rio.band(dst, 1),
+                src_transform=src.transform,
+                src_crs=src.crs,
+                dst_transform=tap_transform,
+                dst_crs=dst_crs,
+                resampling=Resampling.nearest,  # NN is default, but explicit here for easy change or experimentation later
+            )
 
 
 def rename(fp):
