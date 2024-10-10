@@ -9,7 +9,7 @@ if "INPUT_ZIP_DIR" not in os.environ:
     INPUT_ZIP_DIR = None
 else:
     INPUT_ZIP_DIR = Path(os.getenv("INPU_ZIP_DIR"))
-    
+
 
 # path to flat directory of extracted data
 INPUT_DIR = Path(os.getenv("INPUT_DIR"))
@@ -39,7 +39,3 @@ DAILY_CHUKCHI_DIR = OUTPUT_DIR / "Chukchi_Daily"
 DAILY_CHUKCHI_DIR.mkdir(exist_ok=True)
 CHUKCHI_NETCDF_DIR = OUTPUT_DIR / "Chukchi_NetCDFs"
 CHUKCHI_NETCDF_DIR.mkdir(exist_ok=True)
-
-# path to an archival directory for the pot-o-gold output data
-# ARCHIVE_DIR = Path(os.getenv("ARCHIVE_DIR"))
-# ARCHIVE_DIR.mkdir(exist_ok=True)
