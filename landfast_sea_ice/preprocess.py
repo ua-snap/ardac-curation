@@ -97,7 +97,7 @@ def tap_reproject_mmm_raster(file):
             )
 
 
-def rename(fp):
+def daily_slie_rename(fp):
     if "Chuk" == fp.parent.parent.name:
         zone = "Chukchi"
         out_dir = DAILY_CHUKCHI_DIR
@@ -118,7 +118,7 @@ def rename(fp):
     return new_fp
 
 
-def tap_reproject_raster(file):
+def tap_reproject_daily_slie_raster(file):
     with rio.open(file) as src:
         # compute the new affine transformation, width and height
         warp_transform, width, height = rio.warp.calculate_default_transform(
@@ -138,11 +138,12 @@ def tap_reproject_raster(file):
                 "height": tap_height,
                 "bounds": array_bounds(tap_height, tap_width, tap_transform),
                 "nodata": 111,
+                "compress": "lzw",
             }
         )
 
         # create the new raster file name
-        out_file = rename(file)
+        out_file = daily_slie_rename(file)
         warnings.filterwarnings("ignore")
 
         with rio.open(out_file, "w", **out_profile) as dst:
