@@ -142,7 +142,7 @@ def get_dates(target_directory):
     dates = []
     geotiffs = list_geotiffs(target_directory, "dailyslie")
 
-    for file in tqdm.tqdm(geotiffs):
+    for file in geotiffs:
         date = re.search(r"(\d{4})(\d{2})(\d{2})", file.name).groups()
         dates.append(datetime(int(date[0]), int(date[1]), int(date[2])))
     return dates
