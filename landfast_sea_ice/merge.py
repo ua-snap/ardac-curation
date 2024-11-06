@@ -1,14 +1,14 @@
 import re
-from datetime import datetime
 import time
+from datetime import datetime
 
 import rasterio
 import xarray as xr
 import rioxarray
 import dask
 import pandas as pd
+import dask.distributed as dd
 from dask_jobqueue import SLURMCluster
-from dask.distributed import Client
 
 from eda import list_geotiffs
 from config import (
@@ -81,52 +81,67 @@ def load_geotiff_as_dataarray(geotiff):
     # drop the "band" dimension because these are all single band GeoTIFFs
     # rioxarray adds a "band" dimension by default
     xr_da = xr_da.squeeze(drop=True)
+    xr_da = xr_da.fillna(111).astype("int16")
     return xr_da
 
 
 def write_netcdf(dataset, output_nc_file):
-    dataset.to_netcdf(output_nc_file)
+    encoding = {"slie": {"dtype": "int16"}}
+    dataset.to_netcdf(output_nc_file, encoding=encoding)
 
 
 if __name__ == "__main__":
-    for ice_season in ice_years[-10:]:
-        cluster = SLURMCluster(
-            cores=20,
-            memory="64GB",
-            queue="t2small",
-            walltime="23:00:00",
-            log_directory=SCRATCH_DIR,
-            local_directory=SCRATCH_DIR,
-            account="cmip6",
-            interface="ib0",
-        )
-        client = Client(cluster)
+    cluster = SLURMCluster(
+        cores=24,
+        memory="128GB",
+        queue="t2small",
+        walltime="23:00:00",
+        log_directory=SCRATCH_DIR,
+        local_directory=SCRATCH_DIR,
+        account="cmip6",
+        interface="ib0",
+    )
+    client = dd.Client(cluster)
+    print(client.dashboard_link)
+    cluster.scale(100)
 
-        cluster.scale(42)
-        geotiff_files = list_geotiffs(DAILY_CHUKCHI_DIR)
-        ice_year_geotiffs = sorted(select_by_ice_year(geotiff_files, ice_season))
-        data_arrays = []
-        dates = []
+    for daily_geotiff_dir in [DAILY_BEAUFORT_DIR, DAILY_CHUKCHI_DIR]:
+        for ice_season in ice_years:
+            geotiff_files = list_geotiffs(daily_geotiff_dir)
+            ice_year_geotiffs = sorted(select_by_ice_year(geotiff_files, ice_season))
+            data_arrays = []
+            dates = []
 
-        for file in ice_year_geotiffs:
-            date = extract_date_from_filename(file.name)
-            dates.append(date)
-            # dask to load the data lazily
-            data_array = dask.delayed(load_geotiff_as_dataarray)(file)
-            data_arrays.append(data_array)
+            for file in ice_year_geotiffs:
+                date = extract_date_from_filename(file.name)
+                dates.append(date)
+                # dask to load the data lazily
+                data_array = dask.delayed(load_geotiff_as_dataarray)(file)
+                data_arrays.append(data_array)
 
-        # compute and stack data arrays to xr dataset with time dim
-        data_arrays = dask.compute(*data_arrays)
+            # compute and stack data arrays to xr dataset with time dim
+            data_arrays = dask.compute(*data_arrays)
+            dataset = xr.concat(data_arrays, dim="time").to_dataset(name="slie")
+            dataset["slie"] = dataset["slie"].astype("int16")
 
-        dataset = xr.concat(data_arrays, dim="time").to_dataset(name="slie")
-        dataset = dataset.assign_coords(time=("time", dates))
-        dataset.attrs["crs"] = rasterio.open(geotiff_files[0]).crs.to_string()
+            dataset = dataset.assign_coords(time=("time", dates))
+            dataset.attrs["crs"] = rasterio.open(geotiff_files[0]).crs.to_string()
 
-        output_nc_file = CHUKCHI_NETCDF_DIR / f"chukchi_sea_daily_slie_{ice_season}.nc"
-        write_netcdf(dataset, output_nc_file)
+            if daily_geotiff_dir == DAILY_BEAUFORT_DIR:
+                nc_prefix = "beaufort"
+                nc_output_dir = BEAUFORT_NETCDF_DIR
+            else:
+                nc_prefix = "chukchi"
+                nc_output_dir = CHUKCHI_NETCDF_DIR
 
-        print(f"NetCDF file successfully written to {output_nc_file}")
+            output_nc_file = (
+                nc_output_dir / f"{nc_prefix}_sea_daily_slie_{ice_season}.nc"
+            )
+            write_netcdf(dataset, output_nc_file)
 
-        cluster.close()
-        client.close()
-        time.sleep(30)
+            print(f"NetCDF successfully written to {output_nc_file}")
+
+    time.sleep(10)
+    client.close()
+    cluster.scale(0)
+    cluster.close()
