@@ -8,7 +8,6 @@ from datetime import datetime
 import numpy as np
 import rasterio as rio
 import matplotlib.pyplot as plt
-import tqdm
 
 from luts import pixel_values, daily_slie_norm, daily_slie_cmap, mmm_cmap
 
@@ -138,7 +137,6 @@ def plot_random_sample(directory):
 
 
 def get_dates(target_directory):
-
     dates = []
     geotiffs = list_geotiffs(target_directory, "dailyslie")
 

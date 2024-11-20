@@ -1,7 +1,8 @@
 import os
 import zipfile
 
-from config import INPUT_ZIP_DIR, INPUT_FLAT_DIR
+from config import INPUT_ZIP_DIR, INPUT_DIR
+
 
 def list_zips():
     """List all zip files in the input directory.
@@ -26,10 +27,9 @@ def unzip_files():
     """
     for zip_file in list_zips():
         with zipfile.ZipFile(zip_file, "r") as z:
-            z.extractall(INPUT_FLAT_DIR)
+            z.extractall(INPUT_DIR)
         os.remove(zip_file)
 
 
 if __name__ == "__main__":
     unzip_files()
-
